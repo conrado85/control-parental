@@ -4,6 +4,8 @@ import devicesRoutes from "./routes/devices.routes";
 
 const app = express();
 
+app.use(express.json());
+
 app.use("/", indexRoutes);
 app.use("/devices", devicesRoutes);
 

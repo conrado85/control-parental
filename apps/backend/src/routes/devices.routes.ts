@@ -1,11 +1,12 @@
 import { Router } from "express";
+import {
+  getDevices,
+  createDevice,
+} from "../controllers/devices.controller";
 
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.json({
-    message: "Listado de dispositivos",
-  });
-});
+router.get("/", getDevices);
+router.post("/", createDevice);
 
 export default router;

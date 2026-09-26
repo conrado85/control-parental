@@ -1,4 +1,7 @@
 import { Request, Response } from "express";
+import { createDeviceService } from "../services/devices.service";
+
+
 
 export const getDevices = (req: Request, res: Response) => {
   res.json({
@@ -9,15 +12,10 @@ export const getDevices = (req: Request, res: Response) => {
 export const createDevice = (req: Request, res: Response) => {
   const { name } = req.body;
 
-  if (!name || typeof name !== "string") {
-    res.status(400).json({
-      message: "El nombre del dispositivo es obligatorio",
-    });
-    return;
-  }
+  const device = createDeviceService(name);
 
   res.status(201).json({
     message: "Dispositivo creado",
-    name,
+    device,
   });
 };

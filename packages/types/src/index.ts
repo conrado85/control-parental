@@ -1,1 +1,1 @@
-export type { Device } from "./device";
+export * from "./device";

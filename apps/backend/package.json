@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-   "dev": "tsx watch src/index.ts",
-   "typecheck": "tsc --noEmit -p tsconfig.json",
-   "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -13,10 +13,16 @@
   "description": "",
   "dependencies": {
     "@control-parental/types": "^1.0.0",
-    "express": "^5.2.1"
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "prisma": "^7.10.0",
     "tsx": "^4.23.15"
   }
 }

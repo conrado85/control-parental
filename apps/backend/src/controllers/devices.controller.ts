@@ -1,18 +1,24 @@
 import { Request, Response } from "express";
-import { createDeviceService } from "../services/devices.service";
+import {
+  createDeviceService,
+  getDevicesService,
+} from "../services/devices.service";
 
 
 
-export const getDevices = (req: Request, res: Response) => {
+export const getDevices = async (req: Request, res: Response) => {
+  const devices = await getDevicesService();
+
   res.json({
-    message: "Listado de  dispositivos",
+    message: "Listado de dispositivos",
+    devices,
   });
 };
 
-export const createDevice = (req: Request, res: Response) => {
+export const createDevice = async (req: Request, res: Response) => {
   const { name } = req.body;
 
-  const device = createDeviceService(name);
+  const device = await createDeviceService(name);
 
   res.status(201).json({
     message: "Dispositivo creado",

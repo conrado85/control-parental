@@ -6,96 +6,99 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  SafeAreaView,
   Platform,
   StatusBar,
-  Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import EnrichmentCard from '../../components/EnrichmentCard';
 
-interface KeywordRule {
+interface BlockedDomain {
   id: string;
-  word: string;
-  category: string;
-  active: boolean;
+  domain: string;
+  source: 'LOTBA' | 'Personalizada';
 }
 
 export default function SecurityScreen() {
-  const [keywords, setKeywords] = useState<KeywordRule[]>([
-    { id: '1', word: 'apuestas', category: 'Juegos de Azar', active: true },
-    { id: '2', word: 'drogas', category: 'Sustancias', active: true },
-    { id: '3', word: 'violencia', category: 'Conducta Sensible', active: true },
+
+  // BACKEND: GET /api/v1/blacklist/lotba
+  // Descripción: Devuelve la lista oficial actualizada de dominios de apuestas ilegales de LOTBA
+  const [domains, setDomains] = useState<BlockedDomain[]>([
+    // Ejemplos de dominios bloqueados
+    { id: '1', domain: 'apuestasilegalesba.com', source: 'LOTBA' },
+    { id: '2', domain: 'casinoilegalonline.net', source: 'LOTBA' },
+    { id: '3', domain: 'ruletatrucha.com', source: 'Personalizada' },
   ]);
-  const [newWord, setNewWord] = useState('');
+  const [newDomain, setNewDomain] = useState('');
 
-  const handleAddKeyword = () => {
-    if (!newWord.trim()) return;
-    const newItem: KeywordRule = {
+  const handleAddDomain = () => {
+    if (!newDomain.trim()) return;
+    
+    // TODO [BACKEND]: POST /api/v1/blacklist/custom
+    // Descripción: Envía el nuevo dominio personalizado ingresado por el tutor al servidor. { domain: newDomain }
+    
+    const newItem: BlockedDomain = {
       id: Date.now().toString(),
-      word: newWord.trim().toLowerCase(),
-      category: 'Personalizada',
-      active: true,
+      domain: newDomain.trim().toLowerCase(),
+      source: 'Personalizada',
     };
-    setKeywords([...keywords, newItem]);
-    setNewWord('');
+    setDomains([...domains, newItem]);
+    setNewDomain('');
   };
 
-  const toggleSwitch = (id: string) => {
-    setKeywords(
-      keywords.map((item) =>
-        item.id === id ? { ...item, active: !item.active } : item
-      )
-    );
-  };
-
-  const handleRemove = (id: string) => {
-    setKeywords(keywords.filter((item) => item.id !== id));
+  const handleRemove = (id: string, source: string) => {
+    if (source === 'LOTBA') {
+      alert('La lista oficial de LOTBA no se puede modificar.');
+      return;
+    }
+    // TODO [BACKEND]: DELETE /api/v1/blacklist/custom/{id}
+    // Descripción: Elimina un dominio personalizado registrado en el backend.
+    setDomains(domains.filter((item) => item.id !== id));
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Reglas de Contenido</Text>
+        <Text style={styles.title}>Filtro de Apuestas Ilegales</Text>
         <Text style={styles.subtitle}>
-          Gestiona el filtro de palabras clave y detección de texto sensible.
+          Visualiza la lista oficial de LOTBA y añade dominios adicionales a bloquear.
         </Text>
+        <EnrichmentCard />
 
-        {/* Formulario para agregar palabra */}
+        {/* Formulario para agregar dominio personalizado */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Nueva palabra a bloquear..."
-            value={newWord}
-            onChangeText={setNewWord}
+            placeholder="Ej: casinonuevoprohibido.com"
+            value={newDomain}
+            onChangeText={setNewDomain}
           />
-          <TouchableOpacity style={styles.addButton} onPress={handleAddKeyword}>
-            <Text style={styles.addButtonText}>Agregar</Text>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddDomain}>
+            <Text style={styles.addButtonText}>Bloquear</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Lista de palabras clave */}
-        <Text style={styles.sectionHeader}>Palabras monitoreadas ({keywords.length})</Text>
+        {/* Lista de dominios */}
+        <Text style={styles.sectionHeader}>Dominios Restringidos ({domains.length})</Text>
         
         <FlatList
-          data={keywords}
+          data={domains}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.ruleCard}>
               <View style={styles.ruleInfo}>
-                <Text style={styles.wordText}>"{item.word}"</Text>
-                <Text style={styles.categoryText}>{item.category}</Text>
+                <Text style={styles.wordText}>{item.domain}</Text>
+                <Text style={[styles.categoryText, item.source === 'LOTBA' ? styles.lotbaText : styles.customText]}>
+                  {item.source === 'LOTBA' ? '🔒 Oficial LOTBA (Solo lectura)' : '👤 Agregado por el Tutor'}
+                </Text>
               </View>
-              <View style={styles.actions}>
-                <Switch
-                  value={item.active}
-                  onValueChange={() => toggleSwitch(item.id)}
-                />
+              {item.source === 'Personalizada' && (
                 <TouchableOpacity
-                  onPress={() => handleRemove(item.id)}
+                  onPress={() => handleRemove(item.id, item.source)}
                   style={styles.deleteButton}
                 >
                   <Text style={styles.deleteText}>✕</Text>
                 </TouchableOpacity>
-              </View>
+              )}
             </View>
           )}
         />
@@ -105,94 +108,21 @@ export default function SecurityScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 20,
-    marginTop: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    marginBottom: 24,
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 48,
-    fontSize: 15,
-  },
-  addButton: {
-    backgroundColor: '#2563EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#334155',
-    marginBottom: 12,
-  },
-  ruleCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  ruleInfo: {
-    flex: 1,
-  },
-  wordText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  categoryText: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  deleteButton: {
-    padding: 6,
-  },
-  deleteText: {
-    color: '#EF4444',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  safeArea: { flex: 1, backgroundColor: '#F8FAFC', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1E293B' },
+  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 20, marginTop: 4 },
+  inputContainer: { flexDirection: 'row', marginBottom: 24, gap: 8 },
+  input: { flex: 1, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#CBD5E1', borderRadius: 8, paddingHorizontal: 12, height: 48, fontSize: 15 },
+  addButton: { backgroundColor: '#2563EB', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, borderRadius: 8 },
+  addButtonText: { color: '#FFFFFF', fontWeight: '600' },
+  sectionHeader: { fontSize: 16, fontWeight: '600', color: '#334155', marginBottom: 12 },
+  ruleCard: { backgroundColor: '#FFFFFF', padding: 14, borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+  ruleInfo: { flex: 1 },
+  wordText: { fontSize: 15, fontWeight: '600', color: '#0F172A' },
+  categoryText: { fontSize: 12, marginTop: 2, fontWeight: '500' },
+  lotbaText: { color: '#007AFF' },
+  customText: { color: '#64748B' },
+  deleteButton: { padding: 6 },
+  deleteText: { color: '#EF4444', fontWeight: 'bold', fontSize: 16 },
 });

@@ -1,119 +1,113 @@
-/** UI del DashboardScreen */
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Switch,
-  Alert,
-  SafeAreaView,
+  FlatList, 
   Platform,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Importación de interfaces desde la carpeta types
 import { AlertItem, DeviceInfo } from '../../types/dashboard';
 
 export default function DashboardScreen(): React.JSX.Element {
-  const [isDevicePaused, setIsDevicePaused] = useState<boolean>(false);
-
-  const [device] = useState<DeviceInfo>({
+  const [device, setDevice] = useState<DeviceInfo>({
     id: 'dev_12345',
-    name: 'Motorola E6 Plus (Nehuén)',
+    name: 'Motorola E6 Plus (Menor)',
     isOnline: true,
     batteryLevel: 78,
     lastSync: 'Hace 2 min',
   });
 
-  const [alerts] = useState<AlertItem[]>([
+  const [alerts, setAlerts] = useState<AlertItem[]>([
     {
       id: '1',
       severity: 'high',
-      app: 'Instagram',
-      message: 'Coincidencia con filtro de Ciberbullying/Acoso',
+      app: 'Navegador Web',
+      message: 'Intento de acceso bloqueado: casinolegalfalso.com (Sitio ilegal LOTBA)',
       time: 'Hace 15m',
       timestamp: Date.now() - 15 * 60 * 1000,
     },
     {
       id: '2',
       severity: 'medium',
-      app: 'TikTok',
-      message: 'Límite de tiempo alcanzado (1h 00m)',
+      app: 'Sistema',
+      message: 'Intento de bypass detectado en Ajustes',
       time: 'Hace 2h',
       timestamp: Date.now() - 2 * 60 * 60 * 1000,
     },
   ]);
 
-  const handleTogglePauseDevice = (value: boolean): void => {
-    setIsDevicePaused(value);
-    const action = value ? 'pausado' : 'desbloqueado';
-    Alert.alert(
-      'Control Remoto',
-      `El dispositivo del menor ha sido ${action} en tiempo real.`
-    );
-  };
+  // BACKEND: GET /api/v1/dashboard/summary
+  // Descripción: Obtiene el estado del dispositivo, métricas de la VPN y alertas recientes.
+  // Uso futuro con el Backend
+  // setDevice(response.data);
+  // setAlerts(response.data.alerts);
+
+  // Renderizador individual para cada alerta de la FlatList
+  const renderAlertItem = ({ item }: { item: AlertItem }) => (
+    <View
+      style={[
+        styles.alertCard,
+        item.severity === 'high' ? styles.borderHigh : styles.borderMedium,
+      ]}
+    >
+      <View style={styles.alertHeader}>
+        <Text
+          style={[
+            styles.badge,
+            item.severity === 'high' ? styles.bgHigh : styles.bgMedium,
+          ]}
+        >
+          {item.severity === 'high' ? 'BLOQUEADO' : 'ADVERTENCIA'}
+        </Text>
+        <Text style={styles.alertTime}>{item.time}</Text>
+      </View>
+      <Text style={styles.alertApp}>Origen: {item.app}</Text>
+      <Text style={styles.alertMsg}>{item.message}</Text>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
+      <FlatList
+        data={alerts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderAlertItem}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Estado del Dispositivo */}
-        <View style={styles.deviceCard}>
-          <Text style={styles.deviceName}>📱 {device.name}</Text>
-          <Text style={styles.deviceStatus}>
-            {device.isOnline ? '🟢 En línea' : '🔴 Desconectado'}  🔋 {device.batteryLevel}%
-          </Text>
-        </View>
-
-        {/* Control Remoto Rápido */}
-        <View style={styles.quickActionCard}>
-          <View style={styles.actionRow}>
-            <Text style={styles.actionText}>Pausar uso del dispositivo</Text>
-            <Switch
-              value={isDevicePaused}
-              onValueChange={handleTogglePauseDevice}
-              trackColor={{ false: '#767577', true: '#FF3B30' }}
-            />
-          </View>
-        </View>
-
-        {/* Alertas Recientes */}
-        <Text style={styles.sectionTitle}>🚨 Alertas Recientes</Text>
-        {alerts.map((item: AlertItem) => (
-          <View
-            key={item.id}
-            style={[
-              styles.alertCard,
-              item.severity === 'high' ? styles.borderHigh : styles.borderMedium,
-            ]}
-          >
-            <View style={styles.alertHeader}>
-              <Text
-                style={[
-                  styles.badge,
-                  item.severity === 'high' ? styles.bgHigh : styles.bgMedium,
-                ]}
-              >
-                {item.severity === 'high' ? 'ALTA' : 'MEDIA'}
+        ListHeaderComponent={
+          <>
+            {/* Estado del Dispositivo Protegido */}
+            <View style={styles.deviceCard}>
+              <Text style={styles.deviceName}>📱 {device.name}</Text>
+              <Text style={styles.deviceStatus}>
+                {device.isOnline ? '🟢 Protegido y en línea' : '🔴 Desconectado'}  🔋 {device.batteryLevel}%
               </Text>
-              <Text style={styles.alertTime}>{item.time}</Text>
             </View>
-            <Text style={styles.alertApp}>App: {item.app}</Text>
-            <Text style={styles.alertMsg}>{item.message}</Text>
-          </View>
-        ))}
 
-        {/* Resumen de Uso */}
-        <Text style={styles.sectionTitle}>📊 Resumen de Uso Hoy</Text>
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTime}>2 horas 45 minutos</Text>
-          <Text style={styles.statsSubtitle}>Límite diario global: 3 horas</Text>
-        </View>
-      </ScrollView>
+            {/* Estado del Motor de VPN y LOTBA */}
+            <View style={styles.quickActionCard}>
+              <Text style={styles.actionTitle}>🛡️ Estado del Bloqueo de Apuestas</Text>
+              <Text style={styles.actionText}>VPN Local y Filtro LOTBA: Activos</Text>
+            </View>
+
+            {/* Alertas de Apuestas Recientes */}
+            <Text style={styles.sectionTitle}>🚨 Alertas de Apuestas Ilegales</Text>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            {/* Resumen de Bloqueos */}
+            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>📊 Resumen de Protección</Text>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsTime}>14 dominios</Text>
+              <Text style={styles.statsSubtitle}>Bloqueados automáticamente hoy por el motor LOTBA</Text>
+            </View>
+          </>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -124,62 +118,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24, // Margen final suficiente antes de la barra inferior
-  },
-  deviceCard: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 },
+  deviceCard: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, marginBottom: 12 },
   deviceName: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
   deviceStatus: { color: '#E5E5EA', fontSize: 13, marginTop: 4 },
-  quickActionCard: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  actionText: { fontSize: 16, fontWeight: '600', color: '#1C1C1E' },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    marginBottom: 10,
-  },
-  alertCard: {
-    backgroundColor: '#FFF',
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderLeftWidth: 5,
-  },
+  quickActionCard: { backgroundColor: '#FFF', padding: 16, borderRadius: 12, marginBottom: 20 },
+  actionTitle: { fontSize: 15, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 4 },
+  actionText: { fontSize: 14, color: '#34C759', fontWeight: '600' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 10 },
+  alertCard: { backgroundColor: '#FFF', padding: 14, borderRadius: 10, marginBottom: 10, borderLeftWidth: 5 },
   borderHigh: { borderLeftColor: '#FF3B30' },
   borderMedium: { borderLeftColor: '#FF9500' },
-  alertHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  badge: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
+  alertHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  badge: { color: '#FFF', fontSize: 10, fontWeight: 'bold', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   bgHigh: { backgroundColor: '#FF3B30' },
   bgMedium: { backgroundColor: '#FF9500' },
   alertTime: { fontSize: 12, color: '#8E8E93' },

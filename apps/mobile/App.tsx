@@ -54,20 +54,20 @@ function TabNavigator() {
         component={DashBoardScreen}
         options={{ tabBarLabel: 'Inicio' }}
       />
+        <Tab.Screen
+          name="Dispositivos"
+          component={DevicesScreen}
+          options={{ tabBarLabel: 'Dispositivos' }}
+        />
       <Tab.Screen
         name="Seguridad"
         component={SecurityScreen}
-        options={{ tabBarLabel: 'Reglas' }}
+        options={{ tabBarLabel: 'Filtros' }}
       />
       <Tab.Screen
         name="Estadísticas"
         component={StatsScreen}
         options={{ tabBarLabel: 'Estadísticas' }}
-      />
-      <Tab.Screen
-        name="Dispositivos"
-        component={DevicesScreen}
-        options={{ tabBarLabel: 'Dispositivos' }}
       />
     </Tab.Navigator>
   );

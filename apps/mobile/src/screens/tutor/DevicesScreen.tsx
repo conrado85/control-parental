@@ -3,7 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
+  FlatList, // 1. Usamos FlatList para manejar de forma eficiente listas escalables
   TouchableOpacity,
   Platform,
   StatusBar,
@@ -22,7 +22,7 @@ interface ConnectedDevice {
 }
 
 export default function DevicesScreen() {
-  const [devices] = useState<ConnectedDevice[]>([
+  const [devices, setDevices] = useState<ConnectedDevice[]>([
     {
       id: '1',
       name: 'Celular de Nehuén',
@@ -34,79 +34,96 @@ export default function DevicesScreen() {
     },
   ]);
 
+  // BACKEND: GET /api/v1/devices
+  // Descripción: Retorna la lista de dispositivos vinculados a la cuenta del adulto responsable con su estado de actividad.
+  // Formato de respuesta esperado: Array de objetos ConnectedDevice
+
+  // BACKEND: POST /api/v1/devices/pair
+  // Descripción: Endpoint utilizado para registrar la vinculación de un nuevo dispositivo mediante el código PIN / QR.
+
   const handleLinkNewDevice = () => {
+    // BACKEND: Aquí se dispararía la petición POST para generar el PIN de vinculación en el servidor.
     Alert.alert(
       'Vincular Dispositivo',
       'Código de vinculación generado: 849-201\n\nIngresa este código en la aplicación instalada en el dispositivo del menor.'
     );
   };
 
+  // Función individual que renderiza cada tarjeta de dispositivo en la FlatList
+  const renderDeviceItem = ({ item }: { item: ConnectedDevice }) => (
+    <View style={styles.deviceCard}>
+      <View style={styles.deviceHeader}>
+        <View>
+          <Text style={styles.deviceName}>{item.name}</Text>
+          <Text style={styles.deviceModel}>{item.model}</Text>
+        </View>
+        <View style={styles.statusBadge}>
+          <Text style={styles.statusText}>
+            {item.isOnline ? '🟢 En línea' : '🔴 Desconectado'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.detailsRow}>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Batería</Text>
+          <Text style={styles.detailValue}>🔋 {item.battery}%</Text>
+        </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Permisos</Text>
+          <Text style={styles.detailValue}>
+            🛡️ {item.permissionsActive}/{item.totalPermissions} activos
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
+      <FlatList
+        data={devices}
+        keyExtractor={(item) => item.id}
+        renderItem={renderDeviceItem}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.title}>Dispositivos y Ajustes</Text>
-        <Text style={styles.subtitle}>
-          Administra los dispositivos vinculados a la cuenta tutora y sus permisos.
-        </Text>
+        ListHeaderComponent={
+          <>
+            <Text style={styles.title}>Dispositivos y Ajustes</Text>
+            <Text style={styles.subtitle}>
+              Administra los dispositivos vinculados a la cuenta tutora y sus permisos.
+            </Text>
 
-        {/* Botón para vincular nuevo dispositivo */}
-        <TouchableOpacity style={styles.linkButton} onPress={handleLinkNewDevice}>
-          <Text style={styles.linkButtonText}>➕ Vincular Nuevo Dispositivo (PIN / QR)</Text>
-        </TouchableOpacity>
+            {/* Botón para vincular nuevo dispositivo */}
+            <TouchableOpacity style={styles.linkButton} onPress={handleLinkNewDevice}>
+              <Text style={styles.linkButtonText}>➕ Vincular Nuevo Dispositivo (PIN / QR)</Text>
+            </TouchableOpacity>
 
-        {/* Lista de Dispositivos Vinculados */}
-        <Text style={styles.sectionHeader}>Dispositivos Vinculados ({devices.length})</Text>
+            {/* Lista de Dispositivos Vinculados */}
+            <Text style={styles.sectionHeader}>Dispositivos Vinculados ({devices.length})</Text>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            {/* Sección de Ajustes Generales */}
+            <Text style={[styles.sectionHeader, { marginTop: 8 }]}>Ajustes de la Cuenta</Text>
 
-        {devices.map((dev) => (
-          <View key={dev.id} style={styles.deviceCard}>
-            <View style={styles.deviceHeader}>
-              <View>
-                <Text style={styles.deviceName}>{dev.name}</Text>
-                <Text style={styles.deviceModel}>{dev.model}</Text>
-              </View>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusText}>
-                  {dev.isOnline ? '🟢 En línea' : '🔴 Desconectado'}
-                </Text>
-              </View>
+            <View style={styles.settingsCard}>
+              <TouchableOpacity style={styles.settingRow}>
+                <Text style={styles.settingText}>🔔 Notificaciones de alerta</Text>
+                <Text style={styles.arrowText}>›</Text>
+              </TouchableOpacity>
+              <View style={styles.divider} />
+              <TouchableOpacity style={styles.settingRow}>
+                <Text style={styles.settingText}>🔒 Cambiar PIN de Tutor</Text>
+                <Text style={styles.arrowText}>›</Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.detailsRow}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Batería</Text>
-                <Text style={styles.detailValue}>🔋 {dev.battery}%</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Permisos</Text>
-                <Text style={styles.detailValue}>
-                  🛡️ {dev.permissionsActive}/{dev.totalPermissions} activos
-                </Text>
-              </View>
-            </View>
-          </View>
-        ))}
-
-        {/* Sección de Ajustes Generales */}
-        <Text style={styles.sectionHeader}>Ajustes de la Cuenta</Text>
-
-        <View style={styles.settingsCard}>
-          <TouchableOpacity style={styles.settingRow}>
-            <Text style={styles.settingText}>🔔 Notificaciones de alerta</Text>
-            <Text style={styles.arrowText}>›</Text>
-          </TouchableOpacity>
-          <View style={styles.divider} />
-          <TouchableOpacity style={styles.settingRow}>
-            <Text style={styles.settingText}>🔒 Cambiar PIN de Tutor</Text>
-            <Text style={styles.arrowText}>›</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+          </>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -116,9 +133,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-  container: {
-    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
